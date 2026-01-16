@@ -4,8 +4,8 @@
 #let page_width = 210mm
 #let page_height = 297mm
 
-#let margin_x = 2cm
-#let margin_y = 1cm
+#let margin_x = 1cm
+#let margin_y = 0.5cm
 
 #let rows = 5
 #let cols = 3
@@ -13,8 +13,9 @@
 
 #let marking_padding = 1cm
 
-#assert(rows * card_size + 2 * marking_padding + margin_y <= page_height)
-#assert(cols * card_size + 2 * marking_padding + margin_x <= page_width)
+// Approx check (gutter is small but matters, margins are double)
+#assert(rows * card_size + 2 * marking_padding + 2 * margin_y <= page_height)
+#assert(cols * card_size + 2 * marking_padding + 2 * margin_x <= page_width)
 
 #set page(
   width: page_width,
@@ -27,71 +28,79 @@
 
 #set text(font: "New Computer Modern")
 
-#set square(
-  stroke: none
-)
+#let card_bg_color = luma(240)
+#let card_stroke = 2pt + black
 
 #let qr_front_side(song) = {
-  square(
-    size: card_size,
+  box(
+    width: card_size,
+    height: card_size,
+    fill: card_bg_color,
+    stroke: card_stroke,
     inset: 0.5cm,
-    image(
-      "qr_codes/" + song.id + ".svg",
-      width: 100%
-    )
+    radius: 4mm,
+    align(center + horizon)[
+      #image(
+        "qr_codes/" + song.id + ".svg",
+        width: 100%
+      )
+    ]
   )
 }
 
 #let text_back_side(song) = {
-  square(
-    size: card_size,
-    inset: 0.05 * card_size,
+  box(
+    width: card_size,
+    height: card_size,
+    fill: card_bg_color,
+    stroke: card_stroke,
+    radius: 4mm,
+    inset: 0.2cm,
     stack(
+      spacing: 5pt,
+      dir: ttb,
+      
+      // Artist
       block(
-        height: 0.25 * card_size,
         width: 100%,
-        align(
-          center + horizon,
-          text(
-            //for no-wrap of artist names
-            song.artists.map(artist => box(artist)).join([, ]),
-            size: 0.06 * card_size
+        height: 25%,
+        align(center + horizon)[
+          #text(
+            song.artists.map(artist => artist).join(", "),
+            size: 11pt,
+            weight: "bold",
+            font: "Roboto"
           )
-        ),
+        ]
       ),
+      
+      // Song Name
       block(
-        height: 0.1 * card_size,
         width: 100%,
-        align(
-          center + horizon,
-          text(
-            [#song.day #song.month],
-            size: 0.06 * card_size
+        height: 35%,
+        align(center + horizon)[
+          #text(
+            song.name,
+            size: 13pt,
+            style: "italic",
+            font: "Roboto"
           )
-        ),
+        ]
       ),
+
+      // Year (Big)
       block(
-        height: 0.2 * card_size,
         width: 100%,
-        align(
-          center + horizon,
-          text(
+        height: 30%,
+        align(center + horizon)[
+          #text(
+            str(song.year),
+            size: 28pt,
             weight: "black",
-            song.year,
-            size: 0.28 * card_size
+            fill: rgb("#d32f2f"), // A distinct color for the year
+            font: "Roboto"
           )
-        ),
-      ),
-      block(
-        height: 0.35 * card_size,
-        width: 100%,
-        align(
-          center + horizon,
-          text(
-            [_ #song.name _],
-            size: 0.06 * card_size
-          )
-        )
+        ]
       )
     )
   )
@@ -199,6 +208,7 @@
   }
   grid(
     columns: cols + 2,
+    gutter: 2mm, // Add gutter spacing
     ..page
   )
 }
